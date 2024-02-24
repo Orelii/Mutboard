@@ -272,4 +272,28 @@ def cancel_bounty_hunter(hunter, creature, column):
 
     bounty_page.batch_clear([f'{column}{row}:{column}{row+3}'])
 
-create_mutation_list()
+def get_bounties():
+    """
+    Retrieves a dictionary of all currently posted bounties, with the keys as
+    the creature names and the values as a nested list of bounty information.
+
+    Args:
+        None
+
+    Returns:
+        dict ( str : list )
+    """
+
+    creatures = create_creature_dict()
+    bounties = {}
+
+    for i in creatures:
+        if creatures[i] > 0:
+            ws = sh.get_worksheet(creatures[i])
+            bounties_creature = []
+            for j in range(get_column_num_from_letter(get_first_open_column((ws))) - 1):
+                bounties_creature.append(ws.col_values(j+1))
+                time.sleep(1)
+            bounties[i] = bounties_creature
+
+    return bounties
