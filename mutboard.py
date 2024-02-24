@@ -35,6 +35,28 @@ def create_creature_dict():
         iteration +=1
     return creature_dict
 
+def create_mutation_dict():
+    """
+    Returns a dictionary with the keys as the names of each mutation in the game
+    and the values as a single character meant to represent it in worksheets.
+
+    Args:
+        None
+
+    Returns:
+        dict (string : string)
+    """
+    keys = sh.sheet1.get_all_values(f'C1:C{len(sh.sheet1.col_values(3))}')
+    values = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    mutation_dict = {}
+    iteration = 0
+
+    for i in keys:
+        mutation_dict[i[0]] = values[iteration]
+        iteration += 1
+
+    return mutation_dict
+
 def get_lowest_open_index(creature_dict):
     """
     Finds the lowest available worksheet index for a bounty page.
@@ -253,3 +275,5 @@ def cancel_bounty_hunter(hunter, creature, column):
     row = column_entries.index(hunter) + 1
 
     bounty_page.batch_clear([f'{column}{row}:{column}{row+3}'])
+
+create_mutation_dict()
