@@ -289,11 +289,38 @@ def get_bounties():
 
     for i in creatures:
         if creatures[i] > 0:
-            ws = sh.get_worksheet(creatures[i])
+            bounty_page = sh.get_worksheet(creatures[i])
             bounties_creature = []
-            for j in range(get_column_num_from_letter(get_first_open_column((ws))) - 1):
-                bounties_creature.append(ws.col_values(j+1))
+            for j in range\
+                     (get_column_num_from_letter\
+                     (get_first_open_column((bounty_page))) - 1):
+                bounties_creature.append(bounty_page.col_values(j+1))
                 time.sleep(1)
             bounties[i] = bounties_creature
 
     return bounties
+
+def get_bounties_per_creature(creature):
+    """
+    Retrieves a list of all currently posted bounties for the specified
+    creature. If no bounties are posted, returns an empty list.
+
+    Args:
+        creature (str) - The name of the creature.
+
+    Returns:
+        list
+    """
+
+    creatures = create_creature_dict()
+    bounty_list = []
+
+    if creatures[creature] > 0:
+        bounty_page = sh.get_worksheet(creatures[creature])
+        for i in range\
+                 (get_column_num_from_letter\
+                 (get_first_open_column(bounty_page)) - 1):
+            bounty_list.append(bounty_page.col_values(i+1))
+            time.sleep(1)
+
+    return bounty_list
