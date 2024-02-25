@@ -2,16 +2,30 @@ import gspread as gs
 import setup
 import time
 
-gc = gs.service_account_from_dict(setup.credentials)
-sh = gc.open("Mutboard")
-
-creature_num = len(sh.sheet1.col_values(1))
+creature_num = 0
+gc = 0
+sh = 0
 
 cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
         'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
         'AA', 'AB', 'AC', 'AD']
 
 version = '0.0.0'
+
+def startup():
+    """
+    Initializes necessary parts of the code. Called on start up.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    global creature_num, gc, sh
+    gc = gs.service_account_from_dict(setup.credentials)
+    sh = gc.open("Mutboard")
+    creature_num = len(sh.sheet1.col_values(1))
 
 def create_creature_dict():
     """
@@ -34,24 +48,6 @@ def create_creature_dict():
         creature_dict[i[0]] = int(values[iteration][0])
         iteration +=1
     return creature_dict
-
-def create_mutation_list():
-    """
-    Returns a list with the names of each mutation in the game in alphabetical
-    order.
-
-    Args:
-        None
-
-    Returns:
-        list (string)
-    """
-    mutation_list = []
-
-    for i in sh.sheet1.get_all_values(f'C1:C{len(sh.sheet1.col_values(3))}'):
-        mutation_list.append(i[0])
-
-    return mutation_list
 
 def get_lowest_open_index(creature_dict):
     """
