@@ -324,3 +324,23 @@ def get_bounties_per_creature(creature):
             time.sleep(1)
 
     return bounty_list
+
+def get_creatures_with_bounties():
+    """
+    Retrieves a list of all creatures that currently have bounties posted for
+    them. If no creatures have bounties, returns an empty list.
+
+    Args:
+        None
+
+    Returns:
+        list
+    """
+    creatures = create_creature_dict()
+    creature_list = []
+
+    for i in creatures:
+        if creatures[i] > 0:
+            creature_list.append(i)
+
+    return creature_list
