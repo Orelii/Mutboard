@@ -268,6 +268,9 @@ def cancel_bounty_hunter(hunter, creature, column):
         hunter (str) - Name of the bounty hunter to be removed.
         creature (str) - Name of the creature.
         column (str) - The column (A - AD) of the bounty.
+
+    Returns:
+        None
     """
 
     bounty_page = sh.get_worksheet(create_creature_dict()[creature][0])
@@ -350,7 +353,7 @@ def get_creatures_with_bounties(creature_dict):
 
     return creature_list
 
-def get_creature_bounty_list(creature, creature_dict):
+def get_creature_bounty_num(creature, creature_dict):
     """
     Returns the number of bounties currently open for the specified creature.
 
@@ -363,3 +366,25 @@ def get_creature_bounty_list(creature, creature_dict):
         int
     """
     return creature_dict[creature][0]
+
+def is_valid_username(name, tag):
+    """
+    Determines if the given display name and username have already been taken
+    by another user.
+
+    Args:
+        name (str) - The user's display name.
+        tag (str) - The user's username.
+
+    Returns:
+        False (if either name is already taken)
+        True
+    """
+    names = ws.sheet1.col_values(10)
+    tags = ws.sheet1.col_values(11)
+
+    if name in names:
+        return False
+    if tag in tags:
+        return False
+    return True
