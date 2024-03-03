@@ -30,22 +30,23 @@ def startup():
 def create_creature_dict():
     """
     Returns a dictionary with the keys as the names of each creature in the game
-    and the values as the current number of open bounties on the respective
-    creature.
+    and the values as a list containing the worksheet ID for and the current
+    number of open bounties on the respective creature.
 
     Args:
         None
 
     Returns:
-        dict (string : int)
+        dict (string : [int, int])
     """
     keys = sh.sheet1.get_all_values(f"A1:A{creature_num}")
     values = sh.sheet1.get_all_values(f"B1:B{creature_num}")
+    bounties = sh.sheet1.get_all_values(f"C1:C{creature_num}")
     creature_dict = {}
     iteration = 0
 
     for i in keys:
-        creature_dict[i[0]] = int(values[iteration][0])
+        creature_dict[i[0]] = [int(values[iteration][0]), int(bounties[iteration][0])]
         iteration +=1
     return creature_dict
 
@@ -54,7 +55,8 @@ def get_lowest_open_index(creature_dict):
     Finds the lowest available worksheet index for a bounty page.
 
     Args:
-        creature_dict (dict - (string : int))
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
 
     Returns:
         int
@@ -62,7 +64,7 @@ def get_lowest_open_index(creature_dict):
     lowest_num = 0
 
     for i in creature_dict:
-        if creature_dict[i] > lowest_num: lowest_num = creature_dict[i]
+        if creature_dict[i][0] > lowest_num: lowest_num = creature_dict[i][0]
 
     return lowest_num + 1
 
@@ -164,13 +166,12 @@ def list_bounty(lister, display, creature, payment, mutations):
         payment (str) - Reward given for completing bounty
         mutations (str) - A series of characters with each individual character
             representing some mutation or trait that is requested by the lister.
-
     Returns:
         None
     """
     creature_dict = create_creature_dict()
 
-    if creature_dict[creature] == 0:
+    if creature_dict[creature][0] == 0:
         create_new_bounty_page(lister=lister,
                                display=display,
                                creature=creature,
@@ -178,17 +179,19 @@ def list_bounty(lister, display, creature, payment, mutations):
                                mutations=mutations,
                                index=get_lowest_open_index(creature_dict))
 
-        sh.sheet1.update_acell(f"B{list(creature_dict.keys()).index(creature)+1}",
-                               get_lowest_open_index(creature_dict))
+        sh.sheet1.update(f"B{list(creature_dict.keys()).index(creature)+1}:C{list(creature_dict.keys()).index(creature)+1}",
+                         [[get_lowest_open_index(creature_dict), creature_dict[creature][1] + 1]])
 
     else:
         add_bounty_to_page(lister=lister,
                            display=display,
                            payment=payment,
                            mutations=mutations,
-                           index=creature_dict[creature])
+                           index=creature_dict[creature][0])
+        sh.sheet1.update_acell(f"C{list(creature_dict.keys()).index(creature)+1}",
+                         creature_dict[creature][1] + 1)
 
-def delist_bounty(creature, column):
+def delist_bounty(creature, column, creature_dict):
     """
     Removes a bounty listed on the bounty board. If it is the only bounty listed
     for that creature, it deletes the bounty page.
@@ -196,13 +199,14 @@ def delist_bounty(creature, column):
     Args:
         creature (str) - Name of creature being delisted
         column (str) - The column (A - AD) of the bounty being delisted.
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
 
     Returns:
         None
     """
 
-    creature_dict = create_creature_dict()
-    bounty_page = sh.get_worksheet(creature_dict[creature])
+    bounty_page = sh.get_worksheet(creature_dict[creature][0])
     bounty_page.batch_clear([f'{column}:{column}'])
 
     top_row = bounty_page.row_values(1)
@@ -215,8 +219,12 @@ def delist_bounty(creature, column):
 
     if empty_board:
         sh.del_worksheet(bounty_page)
-        sh.sheet1.update_acell(f"B{list(creature_dict.keys()).index(creature)+1}",
-                               0)
+        sh.sheet1.update(f"B{list(creature_dict.keys()).index(creature)+1}:C{list(creature_dict.keys()).index(creature)+1}",
+                               [[0, creature_dict[creature][1] - 1]])
+    else:
+        sh.sheet1.update_acell(f'C{list(creature_dict.keys()).index(creature)+1}',
+                               creature_dict[creature][1] - 1)
+
 
 def add_bounty_hunter(hunter, display, creature, obtained, time, column):
     """
@@ -262,30 +270,30 @@ def cancel_bounty_hunter(hunter, creature, column):
         column (str) - The column (A - AD) of the bounty.
     """
 
-    bounty_page = sh.get_worksheet(create_creature_dict()[creature])
+    bounty_page = sh.get_worksheet(create_creature_dict()[creature][0])
     column_entries = bounty_page.col_values(get_column_num_from_letter(column))
     row = column_entries.index(hunter) + 1
 
     bounty_page.batch_clear([f'{column}{row}:{column}{row+3}'])
 
-def get_bounties():
+def get_bounties(creature_dict):
     """
     Retrieves a dictionary of all currently posted bounties, with the keys as
     the creature names and the values as a nested list of bounty information.
 
     Args:
-        None
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
 
     Returns:
         dict ( str : list )
     """
 
-    creatures = create_creature_dict()
     bounties = {}
 
-    for i in creatures:
-        if creatures[i] > 0:
-            bounty_page = sh.get_worksheet(creatures[i])
+    for i in creature_dict:
+        if creature_dict[i][0] > 0:
+            bounty_page = sh.get_worksheet(creature_dict[i][0])
             bounties_creature = []
             for j in range\
                      (get_column_num_from_letter\
@@ -296,23 +304,24 @@ def get_bounties():
 
     return bounties
 
-def get_bounties_per_creature(creature):
+def get_bounties_per_creature(creature, creature_dict):
     """
     Retrieves a list of all currently posted bounties for the specified
     creature. If no bounties are posted, returns an empty list.
 
     Args:
         creature (str) - The name of the creature.
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
 
     Returns:
         list
     """
 
-    creatures = create_creature_dict()
     bounty_list = []
 
-    if creatures[creature] > 0:
-        bounty_page = sh.get_worksheet(creatures[creature])
+    if creature_dict[creature][0] > 0:
+        bounty_page = sh.get_worksheet(creature_dict[creature][0])
         for i in range\
                  (get_column_num_from_letter\
                  (get_first_open_column(bounty_page)) - 1):
@@ -321,22 +330,36 @@ def get_bounties_per_creature(creature):
 
     return bounty_list
 
-def get_creatures_with_bounties():
+def get_creatures_with_bounties(creature_dict):
     """
     Retrieves a list of all creatures that currently have bounties posted for
     them. If no creatures have bounties, returns an empty list.
 
     Args:
-        None
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
 
     Returns:
         list
     """
-    creatures = create_creature_dict()
     creature_list = []
 
-    for i in creatures:
-        if creatures[i] > 0:
+    for i in creature_dict:
+        if creature_dict[i][0] > 0:
             creature_list.append(i)
 
     return creature_list
+
+def get_creature_bounty_list(creature, creature_dict):
+    """
+    Returns the number of bounties currently open for the specified creature.
+
+    Args:
+        creature (str) - The name of the creature.
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
+
+    Returns:
+        int
+    """
+    return creature_dict[creature][0]
