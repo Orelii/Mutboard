@@ -130,6 +130,7 @@ def create_new_bounty_page(lister, display, creature, payment, mutations, index)
                         [mutations],
                         [time.time()]])
     bounty_page.update_acell('AE1', 'END')
+    time.sleep(1)
 
 def add_bounty_to_page(lister, display, payment, mutations, index):
     """
@@ -154,6 +155,7 @@ def add_bounty_to_page(lister, display, payment, mutations, index):
                         [payment],
                         [mutations],
                         [time.time()]])
+    time.sleep(1)
 
 def list_bounty(lister, display, creature, payment, mutations):
     """
@@ -190,6 +192,7 @@ def list_bounty(lister, display, creature, payment, mutations):
                            index=creature_dict[creature][0])
         sh.sheet1.update_acell(f"C{list(creature_dict.keys()).index(creature)+1}",
                          creature_dict[creature][1] + 1)
+    time.sleep(2.5)
 
 def delist_bounty(creature, column, creature_dict):
     """
@@ -224,6 +227,7 @@ def delist_bounty(creature, column, creature_dict):
     else:
         sh.sheet1.update_acell(f'C{list(creature_dict.keys()).index(creature)+1}',
                                creature_dict[creature][1] - 1)
+    time.sleep(2)
 
 
 def add_bounty_hunter(hunter, display, creature, obtained, time, column):
@@ -259,6 +263,7 @@ def add_bounty_hunter(hunter, display, creature, obtained, time, column):
             row = len(column_entries)+1
             bounty_page.update(f'{column}{row}:{column}{row+3}',
                                [[hunter], [display], [obtained], [time]])
+    time.sleep(2)
 
 def cancel_bounty_hunter(hunter, creature, column):
     """
@@ -278,6 +283,7 @@ def cancel_bounty_hunter(hunter, creature, column):
     row = column_entries.index(hunter) + 1
 
     bounty_page.batch_clear([f'{column}{row}:{column}{row+3}'])
+    time.sleep(1)
 
 def get_bounties(creature_dict):
     """
@@ -367,24 +373,30 @@ def get_creature_bounty_num(creature, creature_dict):
     """
     return creature_dict[creature][0]
 
-def is_valid_username(name, tag):
+def is_valid_username(tag):
     """
-    Determines if the given display name and username have already been taken
-    by another user.
+    Determines if the given username has already been taken by another user.
 
     Args:
-        name (str) - The user's display name.
         tag (str) - The user's username.
 
     Returns:
-        False (if either name is already taken)
+        False (if username is already taken)
         True
     """
-    names = ws.sheet1.col_values(10)
-    tags = ws.sheet1.col_values(11)
+    tags = sh.sheet1.col_values(11)
+    time.sleep(2)
 
-    if name in names:
-        return False
     if tag in tags:
         return False
     return True
+
+def add_new_user(name, tag):
+    """
+    Adds a new user to the worksheet.
+
+    Args:
+        name (str) - The given username.
+    """
+    user_count = len(sh.sheet1.col_values(10))+1
+    sh.sheet1.update(f'J{user_count}:K{user_count}', [[name, tag]])
