@@ -1,6 +1,9 @@
 import gspread as gs
 import setup
 import time
+import io
+import urllib
+from PIL import Image
 
 creature_num = 0
 gc = 0
@@ -371,7 +374,7 @@ def get_creature_bounty_num(creature, creature_dict):
     Returns:
         int
     """
-    return creature_dict[creature][0]
+    return creature_dict[creature][1]
 
 def is_valid_username(tag):
     """
@@ -400,3 +403,24 @@ def add_new_user(name, tag):
     """
     user_count = len(sh.sheet1.col_values(10))+1
     sh.sheet1.update(f'J{user_count}:K{user_count}', [[name, tag]])
+
+def get_creature_icon(creature, creature_dict, size = (100, 100)):
+    """
+    Returns a 100x100 icon of the specified creature.
+
+    Args:
+        creature (str) - The name of the creature.
+        creature_dict (dict - (string : [int, int])) - All bounty information
+        for all creatures.
+        size (tuple - (int, int)) - The target size of the image. Default is
+        100x100 pixels.
+
+    Returns:
+        PIL.Image
+    """
+
+    url = sh.sheet1.get(f"D{sh.sheet1.col_values(1).index(creature)+1}",
+                        value_render_option = "FORMULA")[0][0][8:-2]
+    data = urllib.request.urlopen(url).read()
+    creature_image = Image.open(io.BytesIO(data)).resize(size, Image.BILINEAR)
+    return creature_image
