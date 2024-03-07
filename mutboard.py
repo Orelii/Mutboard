@@ -28,7 +28,6 @@ def startup():
     global creature_num, gc, sh
     gc = gs.service_account_from_dict(setup.credentials)
     sh = gc.open("Mutboard")
-    creature_num = len(sh.sheet1.col_values(1))
 
 def create_creature_dict():
     """
@@ -42,15 +41,18 @@ def create_creature_dict():
     Returns:
         dict (string : [int, int])
     """
-    keys = sh.sheet1.get_all_values(f"A1:A{creature_num}")
-    values = sh.sheet1.get_all_values(f"B1:B{creature_num}")
-    bounties = sh.sheet1.get_all_values(f"C1:C{creature_num}")
+    keys = sh.sheet1.col_values(1)
+    values = sh.sheet1.col_values(2)
+    bounties = sh.sheet1.col_values(3)
+    images = sh.sheet1.col_values(4)
     creature_dict = {}
     iteration = 0
 
     for i in keys:
-        creature_dict[i[0]] = [int(values[iteration][0]), int(bounties[iteration][0])]
+        creature_dict[i] = [int(values[iteration]), int(bounties[iteration]), images[iteration]]
         iteration +=1
+
+    print(creature_dict['Jeff'])
     return creature_dict
 
 def get_lowest_open_index(creature_dict):
@@ -419,8 +421,8 @@ def get_creature_icon(creature, creature_dict, size = (100, 100)):
         PIL.Image
     """
 
-    url = sh.sheet1.get(f"D{sh.sheet1.col_values(1).index(creature)+1}",
-                        value_render_option = "FORMULA")[0][0][8:-2]
+    url = creature_dict[creature][2]
+    time.sleep(0.5)
     data = urllib.request.urlopen(url).read()
     creature_image = Image.open(io.BytesIO(data)).resize(size, Image.BILINEAR)
     return creature_image
